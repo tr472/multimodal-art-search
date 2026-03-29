@@ -1,0 +1,19 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  @apply text-slate-900;
+  background:
+    radial-gradient(circle at top left, rgba(246, 228, 199, 0.55), transparent 28%),
+    radial-gradient(circle at top right, rgba(219, 234, 254, 0.45), transparent 26%),
+    linear-gradient(180deg, #f8f7f3 0%, #f6f4ef 52%, #fbfbfa 100%);
+}
+
+.container {
+  @apply mx-auto max-w-6xl px-6 py-8;
+}
+
+.card {
+  @apply rounded-2xl border border-slate-200 bg-white p-5 shadow-sm;
+}

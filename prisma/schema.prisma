@@ -1,0 +1,247 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum EntityType {
+  ARTWORK
+  ARTIST
+}
+
+enum FeedbackSignalType {
+  LIKE
+  DISLIKE
+  SAVE
+  SKIP
+}
+
+enum ChatRole {
+  USER
+  ASSISTANT
+}
+
+enum ThreadImageRole {
+  PRIMARY
+  SUPPORTING
+  DETAIL
+  WALL_LABEL
+  COMPARATIVE
+}
+
+enum ExternalLookupMode {
+  IDENTIFICATION
+  CONTEXT
+  RECOMMENDATION
+}
+
+model User {
+  id              String                @id @default(cuid())
+  email           String                @unique
+  name            String?
+  createdAt       DateTime              @default(now())
+  submissions     Submission[]
+  tasteProfile    UserTasteProfile?
+  feedbackEvents  UserFeedback[]
+  recommendations RecommendationEvent[]
+  chatThreads     ChatThread[]
+}
+
+model UserTasteProfile {
+  userId         String   @id
+  summaryText    String?
+  preferenceTags String[]
+  dislikedTags   String[]
+  embedding      Json?
+  updatedAt      DateTime @updatedAt
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Submission {
+  id              String               @id @default(cuid())
+  userId           String
+  imageUrl         String
+  rawNote          String?
+  transcript       String?
+  createdAt        DateTime             @default(now())
+  user             User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  analysis         SubmissionAnalysis?
+  recommendations  RecommendationEvent[]
+  chatThread       ChatThread?
+}
+
+model ChatThread {
+  id              String                 @id @default(cuid())
+  userId          String
+  submissionId    String                 @unique
+  title           String?
+  summaryText     String?
+  isSaved         Boolean                @default(false)
+  discardedAt     DateTime?
+  createdAt       DateTime               @default(now())
+  updatedAt       DateTime               @updatedAt
+  user            User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  submission      Submission             @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  messages        ChatMessage[]
+  images          ThreadImage[]
+  externalLookups ExternalLookupResult[]
+  artworkMentions ThreadArtworkMention[]
+  artistMentions  ThreadArtistMention[]
+}
+
+model ChatMessage {
+  id          String    @id @default(cuid())
+  threadId    String
+  role        ChatRole
+  content     String
+  metadataJson Json?
+  createdAt   DateTime  @default(now())
+  thread      ChatThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+
+  @@index([threadId, createdAt])
+}
+
+model ThreadImage {
+  id         String          @id @default(cuid())
+  threadId   String
+  imageUrl   String
+  role       ThreadImageRole
+  note       String?
+  createdAt  DateTime        @default(now())
+  thread     ChatThread      @relation(fields: [threadId], references: [id], onDelete: Cascade)
+
+  @@index([threadId, createdAt])
+}
+
+model ExternalLookupResult {
+  id               String             @id @default(cuid())
+  threadId         String
+  mode             ExternalLookupMode
+  queryText        String
+  candidateTitle   String?
+  candidateArtist  String?
+  movementOrPeriod String?
+  evidenceSummary  String
+  sourceUrls       Json
+  confidence       Float
+  sourceLabel      String
+  createdAt        DateTime           @default(now())
+  thread           ChatThread         @relation(fields: [threadId], references: [id], onDelete: Cascade)
+
+  @@index([threadId, createdAt])
+}
+
+model ThreadArtworkMention {
+  id         String     @id @default(cuid())
+  threadId   String
+  artworkId  String
+  createdAt  DateTime   @default(now())
+  thread     ChatThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  artwork    Artwork    @relation(fields: [artworkId], references: [id], onDelete: Cascade)
+
+  @@unique([threadId, artworkId])
+  @@index([threadId, createdAt])
+}
+
+model ThreadArtistMention {
+  id        String     @id @default(cuid())
+  threadId  String
+  artistId  String
+  createdAt DateTime   @default(now())
+  thread    ChatThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  artist    Artist     @relation(fields: [artistId], references: [id], onDelete: Cascade)
+
+  @@unique([threadId, artistId])
+  @@index([threadId, createdAt])
+}
+
+model SubmissionAnalysis {
+  submissionId      String   @id
+  modelSummary      String
+  detectedStyle     String?
+  detectedSubjects  String[]
+  paletteNotes      String?
+  ocrText           String?
+  embedding         Json?
+  confidence        Float
+  submission        Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+}
+
+model Institution {
+  id           String    @id @default(cuid())
+  name         String
+  type         String?
+  city         String?
+  country      String?
+  website      String?
+  artworks     Artwork[]
+
+  @@unique([name, city])
+}
+
+model Artist {
+  id             String              @id @default(cuid())
+  name           String
+  birthYear      Int?
+  deathYear      Int?
+  nationality    String?
+  bio            String?
+  textEmbedding  Json?
+  artworks       Artwork[]
+  threadMentions ThreadArtistMention[]
+
+  @@unique([name, birthYear])
+}
+
+model Artwork {
+  id              String   @id @default(cuid())
+  externalSource  String
+  externalId      String
+  title           String
+  artistId        String?
+  institutionId   String?
+  dateText        String?
+  medium          String?
+  dimensions      String?
+  description     String?
+  imageUrl        String?
+  metadataJson    Json?
+  textEmbedding   Json?
+  imageEmbedding  Json?
+  sourceUrl       String?
+  provenanceJson  Json
+  artist          Artist?      @relation(fields: [artistId], references: [id])
+  institution     Institution? @relation(fields: [institutionId], references: [id])
+  threadMentions  ThreadArtworkMention[]
+
+  @@unique([externalSource, externalId])
+}
+
+model RecommendationEvent {
+  id                    String     @id @default(cuid())
+  userId                String
+  submissionId          String
+  recommendedEntityType EntityType
+  recommendedEntityId   String
+  rank                  Int
+  reasonText            String
+  createdAt             DateTime   @default(now())
+  user                  User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  submission            Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+}
+
+model UserFeedback {
+  id               String             @id @default(cuid())
+  userId           String
+  targetEntityType EntityType
+  targetEntityId   String
+  signalType       FeedbackSignalType
+  signalValue      Float
+  note             String?
+  createdAt        DateTime           @default(now())
+  user             User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+}

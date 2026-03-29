@@ -1,0 +1,41 @@
+{
+  "name": "art-search-mvp",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:migrate:deploy": "prisma migrate deploy",
+    "db:seed": "tsx scripts/seed.ts",
+    "db:seed:reset": "tsx scripts/seed.ts --reset-conversations --reset-taste-profile",
+    "db:seed:prune": "tsx scripts/seed.ts --prune-corpus-to-seed --reset-conversations --reset-taste-profile",
+    "demo:setup": "npm run db:generate && npm run db:migrate && npm run db:seed:reset",
+    "ingest:met": "tsx scripts/ingest-museum.ts",
+    "subset:create": "tsx scripts/create-demo-subset.ts"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.6.0",
+    "next": "^15.2.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.14.0",
+    "@types/react": "^19.0.10",
+    "@types/react-dom": "^19.0.4",
+    "autoprefixer": "^10.4.21",
+    "eslint": "^9.39.4",
+    "eslint-config-next": "^16.2.1",
+    "postcss": "^8.5.3",
+    "prisma": "^6.6.0",
+    "tailwindcss": "^3.4.17",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.2"
+  }
+}
