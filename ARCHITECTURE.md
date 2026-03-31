@@ -1,9 +1,9 @@
 # Architecture
 
-## Recommended stack
+## Tech Stack
 - Frontend: Next.js
 - Backend/API: Next.js API routes or FastAPI
-- Database: Postgres
+- Database: Postgres (Neon or Local)
 - Object storage: S3-compatible bucket
 - Vector store: pgvector or dedicated vector DB
 - Search: Postgres hybrid search initially
