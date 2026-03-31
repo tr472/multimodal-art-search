@@ -240,9 +240,7 @@ After `npm run demo:setup`, you can immediately:
 
 ---
 
-## Technical Details Worth Demonstrating
-
-If you are showing the project to someone else, these are the implementation details that matter most:
+## Technical Details Worth Noting
 
 - The corpus is ingested from external museum data, normalized into shared `Artwork`, `Artist`, and `Institution` records, and stored with provenance.
 - Retrieval is not just lexical search: the app stores text embeddings, visual descriptor embeddings, and optional `pgvector` columns for faster candidate search.
